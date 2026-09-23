@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LeadAI — Lead Generation Platform</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.0.0/tabler-icons.min.css">
+<link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+
+<!-- Sidebar -->
+<nav class="sidebar">
+  <div class="logo">LeadAI</div>
+  <div class="nav-links">
+    <button class="nav-btn active" onclick="showPage('pipeline')"><i class="ti ti-database"></i> Pipeline</button>
+    <button class="nav-btn" onclick="showPage('search')"><i class="ti ti-search"></i> Search</button>
+    <button class="nav-btn" onclick="showPage('discover')"><i class="ti ti-world-search"></i> Discover</button>
+    <button class="nav-btn" onclick="showPage('qualify')"><i class="ti ti-chart-bar"></i> Qualify</button>
+    <button class="nav-btn" onclick="showPage('outreach')"><i class="ti ti-mail"></i> Outreach</button>
+    <button class="nav-btn" onclick="showPage('import')"><i class="ti ti-upload"></i> Import</button>
+    <button class="nav-btn" onclick="showPage('enrich')"><i class="ti ti-sparkles"></i> Enrich</button>
+  </div>
+  <div class="sidebar-footer">
+    <div class="api-status" id="api-status">
+      <span class="dot" id="status-dot"></span>
+      <span id="status-label">Checking…</span>
+    </div>
+  </div>
+</nav>
+
+<!-- Main content -->
+<main class="main">
+
+  <!-- ── PIPELINE ─────────────────────────────────────────────── -->
+  <div class="page active" id="page-pipeline">
+    <div class="page-header">
+      <div>
+        <h1>Pipeline</h1>
+        <p class="page-sub">Your qualified leads</p>
+      </div>
+      <button class="btn btn-primary" onclick="showPage('import')"><i class="ti ti-upload"></i> Import leads</button>
+    </div>
+    <div class="stats-grid" id="stats-grid"></div>
+    <div class="toolbar">
+      <div class="search-wrap">
+        <i class="ti ti-search search-icon"></i>
+        <input type="text" id="pl-q" placeholder="Search name, company, title…" oninput="loadPipeline()">
+      </div>
+      <select id="pl-status" onchange="loadPipeline()">
+        <option value="">All statuses</option>
+        <option value="hot">Hot</option>
+        <option value="warm">Warm</option>
+        <option value="cold">Cold</option>
+      </select>
+      <select id="pl-industry" onchange="loadPipeline()">
+        <option value="">All industries</option>
+        <option>SaaS</option><option>Fintech</option><option>E-commerce</option>
+        <option>Logistics</option><option>Health</option><option>Developer Tools</option>
+      </select>
+      <select id="pl-sort" onchange="loadPipeline()">
+        <option value="score">Highest score</option>
+        <option value="name">Name A–Z</option>
+        <option value="company">Company A–Z</option>
+        <option value="newest">Newest first</option>
+      </select>
+    </div>
+    <div id="pipeline-list"></div>
+  </div>
+
+  <!-- ── APOLLO SEARCH ────────────────────────────────────────── -->
+  <div class="page" id="page-search">
+    <div class="page-header">
+      <div><h1>Apollo search</h1><p class="page-sub">Find contacts in Apollo's B2B database</p></div>
+    </div>
+    <div class="card">
+      <div class="grid2">
+        <div><label>Job titles (comma-separated)</label><input type="text" id="ap-titles" placeholder="Head of Marketing, VP Sales"></div>
+        <div><label>Location</label><input type="text" id="ap-location" placeholder="Nigeria, United States"></div>
+      </div>
+      <div class="grid2">
+        <div><label>Company name</label><input type="text" id="ap-company" placeholder="Salesforce, HubSpot…"></div>
+        <div><label>Company size</label>
+          <select id="ap-size">
+            <option value="">Any</option>
+            <option value="1,10">1–10</option>
+            <option value="11,50">11–50</option>
+            <option value="51,200">51–200</option>
+            <option value="201,1000">201–1,000</option>
+            <option value="1001,100000">1,000+</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:4px;">
+        <button class="btn btn-primary" onclick="apolloSearch(1)" id="ap-btn"><i class="ti ti-search"></i> Search Apollo</button>
+        <select id="ap-per-page" style="width:auto;">
+          <option value="10">10 results</option>
+          <option value="25" selected>25 results</option>
+          <option value="50">50 results</option>
+        </select>
+      </div>
+    </div>
+    <div id="ap-results" style="display:none;">
+      <div class="result-header">
+        <span class="result-count" id="ap-count"></span>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-sm" onclick="exportApolloCSV()"><i class="ti ti-download"></i> Export CSV</button>
+          <button class="btn btn-sm" onclick="addAllApollo()"><i class="ti ti-plus"></i> Add all to pipeline</button>
+        </div>
+      </div>
+      <div id="ap-list"></div>
+      <div class="pagination" id="ap-pagination"></div>
+    </div>
+  </div>
+
+  <!-- ── DISCOVER ─────────────────────────────────────────────── -->
+  <div class="page" id="page-discover">
+    <div class="page-header">
+      <div><h1>Discover</h1><p class="page-sub">AI-generated contact profiles matching your ICP</p></div>
+    </div>
+    <div class="card">
+      <div class="grid2">
+        <div><label>Job title or role</label><input type="text" id="d-title" placeholder="Head of Marketing, VP Sales…"></div>
+        <div><label>Industry</label><input type="text" id="d-industry" placeholder="SaaS, Fintech…"></div>
+      </div>
+      <div class="grid2">
+        <div><label>Company size</label>
+          <select id="d-size">
+            <option value="">Any</option><option>1–10</option><option>11–50</option>
+            <option>51–200</option><option>201–1000</option><option>1000+</option>
+          </select>
+        </div>
+        <div><label>Region</label><input type="text" id="d-location" placeholder="Nigeria, West Africa…"></div>
+      </div>
+      <div><label>Pain points / buying signals</label><input type="text" id="d-pain" placeholder="Scaling outbound, reducing CAC…"></div>
+      <button class="btn btn-primary" onclick="discoverContacts()" id="d-btn" style="margin-top:8px;"><i class="ti ti-sparkles"></i> Find contacts with AI</button>
+    </div>
+    <div id="d-results" style="display:none;">
+      <div class="result-header">
+        <span class="result-count" id="d-count"></span>
+        <button class="btn btn-sm" onclick="addAllDiscovered()"><i class="ti ti-plus"></i> Add all to pipeline</button>
+      </div>
+      <div id="d-list"></div>
+    </div>
+  </div>
+
+  <!-- ── QUALIFY ──────────────────────────────────────────────── -->
+  <div class="page" id="page-qualify">
+    <div class="page-header">
+      <div><h1>AI qualifier</h1><p class="page-sub">Score a lead using BANT/MEDDIC criteria</p></div>
+    </div>
+    <div class="card">
+      <div class="grid2">
+        <div><label>Lead name</label><input type="text" id="q-name" placeholder="Sarah Chen"></div>
+        <div><label>Job title</label><input type="text" id="q-title" placeholder="Head of Marketing"></div>
+      </div>
+      <div class="grid2">
+        <div><label>Company</label><input type="text" id="q-company" placeholder="Acme Corp"></div>
+        <div><label>Company size</label>
+          <select id="q-size"><option>1–10</option><option>11–50</option><option selected>51–200</option><option>201–1000</option><option>1000+</option></select>
+        </div>
+      </div>
+      <div class="grid2">
+        <div><label>Industry</label><input type="text" id="q-industry" placeholder="SaaS / Tech"></div>
+        <div><label>Budget signal</label>
+          <select id="q-budget"><option>Unknown</option><option>Under $5k/mo</option><option>$5k–$20k/mo</option><option>$20k+/mo</option></select>
+        </div>
+      </div>
+      <div><label>Pain points / notes</label><textarea id="q-notes" placeholder="Struggling with manual outreach, team of 5 SDRs…" style="height:80px;width:100%;resize:vertical;"></textarea></div>
+      <button class="btn btn-primary" onclick="qualifyLead()" id="q-btn"><i class="ti ti-chart-bar"></i> Qualify with AI</button>
+      <div id="q-result" style="display:none;margin-top:1rem;"></div>
+    </div>
+  </div>
+
+  <!-- ── OUTREACH ─────────────────────────────────────────────── -->
+  <div class="page" id="page-outreach">
+    <div class="page-header">
+      <div><h1>Outreach generator</h1><p class="page-sub">Write personalized messages — single or batch</p></div>
+    </div>
+    <div class="tabs">
+      <button class="tab active" onclick="swOutreach('single')">Single message</button>
+      <button class="tab" onclick="swOutreach('batch')">Batch generate</button>
+    </div>
+
+    <!-- Single -->
+    <div id="out-single">
+      <div class="card">
+        <div class="grid2">
+          <div><label>Lead name</label><input type="text" id="o-name" placeholder="John Smith"></div>
+          <div><label>Channel</label>
+            <select id="o-channel"><option>Cold email</option><option>LinkedIn message</option><option>LinkedIn connection note</option><option>Follow-up email</option></select>
+          </div>
+        </div>
+        <div class="grid2">
+          <div><label>Their role & company</label><input type="text" id="o-role" placeholder="VP Sales at TechCo"></div>
+          <div><label>Your offering</label><input type="text" id="o-offering" placeholder="AI sales automation tool"></div>
+        </div>
+        <div class="grid2">
+          <div><label>Your name & company</label><input type="text" id="o-sender" placeholder="Alex from LeadAI"></div>
+          <div><label>Tone</label>
+            <select id="o-tone"><option>Professional & concise</option><option>Conversational & friendly</option><option>Direct & bold</option><option>Curious & thoughtful</option></select>
+          </div>
+        </div>
+        <div><label>Personalization hook</label><input type="text" id="o-hook" placeholder="Saw their post about scaling SDR teams…"></div>
+        <button class="btn btn-primary" onclick="generateSingle()" id="o-btn" style="margin-top:8px;"><i class="ti ti-send"></i> Generate message</button>
+        <div id="o-result" style="display:none;margin-top:1rem;"></div>
+      </div>
+    </div>
+
+    <!-- Batch -->
+    <div id="out-batch" style="display:none;">
+      <div class="card">
+        <div class="grid2">
+          <div><label>Channel</label>
+            <select id="b-channel"><option>Cold email</option><option>LinkedIn message</option><option>LinkedIn connection note</option><option>Follow-up email</option></select>
+          </div>
+          <div><label>Tone</label>
+            <select id="b-tone"><option>Professional & concise</option><option>Conversational & friendly</option><option>Direct & bold</option><option>Curious & thoughtful</option></select>
+          </div>
+        </div>
+        <div class="grid2">
+          <div><label>Your offering</label><input type="text" id="b-offering" placeholder="AI sales automation tool"></div>
+          <div><label>Your name & company</label><input type="text" id="b-sender" placeholder="Alex from LeadAI"></div>
+        </div>
+        <div><label>Campaign context</label><input type="text" id="b-context" placeholder="These leads all came from SaaStr 2025…"></div>
+        <div style="margin-top:12px;">
+          <label>Select leads from pipeline</label>
+          <div id="batch-lead-list" style="margin-top:6px;"></div>
+          <div style="display:flex;gap:8px;margin-top:8px;">
+            <button class="btn btn-sm" onclick="selectAllBatch(true)">Select all</button>
+            <button class="btn btn-sm" onclick="selectAllBatch(false)">Deselect all</button>
+            <span style="font-size:12px;color:#666;" id="batch-sel-count"></span>
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="generateBatch()" id="b-btn" style="margin-top:12px;"><i class="ti ti-send"></i> Generate all messages</button>
+      </div>
+      <div id="b-results" style="display:none;"></div>
+    </div>
+  </div>
+
+  <!-- ── IMPORT ───────────────────────────────────────────────── -->
+  <div class="page" id="page-import">
+    <div class="page-header">
+      <div><h1>Import leads</h1><p class="page-sub">Upload a CSV or paste data</p></div>
+    </div>
+    <div class="card">
+      <div class="drop-zone" id="drop-zone" onclick="document.getElementById('csv-file').click()" ondragover="event.preventDefault();this.classList.add('drag')" ondragleave="this.classList.remove('drag')" ondrop="handleDrop(event)">
+        <i class="ti ti-upload" style="font-size:28px;color:#aaa;display:block;margin-bottom:8px;"></i>
+        <div style="font-size:14px;font-weight:500;margin-bottom:4px;">Drop CSV here or click to browse</div>
+        <div style="font-size:12px;color:#aaa;">Headers auto-detected. Any column order.</div>
+      </div>
+      <input type="file" id="csv-file" accept=".csv" style="display:none;" onchange="handleFile(this.files[0])">
+      <div style="margin-top:1rem;">
+        <label>Or paste CSV content</label>
+        <textarea id="csv-paste" placeholder="name,title,company,email,industry&#10;Sarah Chen,Head of Marketing,Acme Corp,sarah@acme.com,SaaS" style="height:100px;width:100%;resize:vertical;font-family:monospace;font-size:12px;"></textarea>
+        <button class="btn btn-primary" onclick="parseCSV()"><i class="ti ti-file-import"></i> Parse CSV</button>
+      </div>
+    </div>
+    <div id="import-mapping" style="display:none;">
+      <div class="card">
+        <div style="font-size:14px;font-weight:500;margin-bottom:10px;">Map columns</div>
+        <div id="col-map"></div>
+        <div style="font-size:12px;color:#aaa;margin-bottom:12px;" id="csv-rows-info"></div>
+        <button class="btn btn-primary" onclick="previewImport()">Preview import</button>
+      </div>
+    </div>
+    <div id="import-preview" style="display:none;">
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div style="font-size:14px;font-weight:500;">Preview <span id="preview-count" style="font-weight:400;color:#666;font-size:13px;"></span></div>
+          <button class="btn btn-sm" onclick="document.getElementById('import-preview').style.display='none';document.getElementById('import-mapping').style.display='block';">Back</button>
+        </div>
+        <div style="overflow-x:auto;"><table id="preview-table" style="width:100%;font-size:12px;border-collapse:collapse;"></table></div>
+        <button class="btn btn-primary" onclick="bulkImport()" style="margin-top:12px;" id="import-btn"><i class="ti ti-check"></i> Import all leads</button>
+        <span id="import-status" style="font-size:12px;color:#666;margin-left:10px;"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ENRICH ───────────────────────────────────────────────── -->
+  <div class="page" id="page-enrich">
+    <div class="page-header">
+      <div><h1>Enrich contact</h1><p class="page-sub">Look up full profile data via Apollo</p></div>
+    </div>
+    <div class="card">
+      <div class="info-box">Provide an email, or first name + last name + company domain.</div>
+      <div class="grid2">
+        <div><label>Email address</label><input type="text" id="en-email" placeholder="sarah@acme.com"></div>
+        <div><label>First name</label><input type="text" id="en-first" placeholder="Sarah"></div>
+      </div>
+      <div class="grid2">
+        <div><label>Last name</label><input type="text" id="en-last" placeholder="Chen"></div>
+        <div><label>Company domain</label><input type="text" id="en-domain" placeholder="acme.com"></div>
+      </div>
+      <button class="btn btn-primary" onclick="enrichContact()" id="en-btn" style="margin-top:8px;"><i class="ti ti-sparkles"></i> Enrich contact</button>
+    </div>
+    <div id="en-result"></div>
+  </div>
+
+</main>
+
+<script src="/js/app.js"></script>
+</body>
+</html>
